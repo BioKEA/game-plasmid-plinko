@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@biokea/leaderboard": "github:BioKEA/biokea-leaderboard-js#main",
+    "@biokea/leaderboard": "github:BioKEA/games-leaderboard-js#main",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
