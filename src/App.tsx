@@ -103,7 +103,7 @@ function App() {
   const [upgradeChoices, setUpgradeChoices] = useState<Upgrade[]>([])
   const [highScore, setHighScore] = useState<number | null>(null)
   const [lastWin, setLastWin] = useState(false)
-  const [muted, setMuted] = useState(false)
+  const [muted, setMuted] = useState(true)
   const [showCTA, setShowCTA] = useState(false)
   // BiokeaLeaderboardPrompt — auto-opens on daily game-over when no handle.
   const [biokeaPromptOpen, setBiokeaPromptOpen] = useState(false)
@@ -149,7 +149,10 @@ function App() {
     const stored = localStorage.getItem(HIGH_SCORE_KEY)
     setHighScore(stored ? parseInt(stored, 10) || 0 : 0)
 
-    const m = localStorage.getItem(MUTED_KEY) === '1'
+    // Default to muted on first visit. Once the player toggles a
+    // preference, "0"/"1" is stored and respected.
+    const storedMute = localStorage.getItem(MUTED_KEY)
+    const m = storedMute === '0' ? false : true
     setMuted(m)
     music.setMuted(m)
 
