@@ -39,7 +39,7 @@ import {
   dismissCTAForever,
 } from '@/lib/game/engagement'
 import { loadHandle, saveHandle, submitDailyScore } from '@/lib/game/leaderboard'
-import { BiokeaLeaderboardPrompt } from '@/components/BiokeaLeaderboardPrompt'
+import { BiokeaLeaderboardPrompt, shouldShowBiokeaPrompt } from '@/components/BiokeaLeaderboardPrompt'
 import { StartScreen } from '@/components/game/StartScreen'
 import { GameScreen } from '@/components/game/GameScreen'
 import { UpgradePicker } from '@/components/game/UpgradePicker'
@@ -108,14 +108,14 @@ function App() {
   // BiokeaLeaderboardPrompt — auto-opens on daily game-over when no handle.
   const [biokeaPromptOpen, setBiokeaPromptOpen] = useState(false)
 
-  // Open the BioKEA leaderboard prompt whenever a daily run ends and the
-  // player hasn't picked a handle yet. The existing in-RunSummary
-  // Leaderboard panel still renders — this just gives a clearer entry.
+  // Open the BioKEA leaderboard prompt on daily game-over unless the
+  // player has subscribed via this prompt before, or skipped it this
+  // session. Pre-fills any handle that's already stored.
   useEffect(() => {
     if (screen !== 'game-over') return
     if (mode !== 'daily') return
-    if (loadHandle()) return
     if (run.score <= 0) return
+    if (!shouldShowBiokeaPrompt()) return
     setBiokeaPromptOpen(true)
   }, [screen, mode, run.score])
 
@@ -709,7 +709,21 @@ function App() {
               characterId: character?.id ?? null,
             })
           }}
-          onSkip={() => setBiokeaPromptOpen(false)}
+          onSkip={() => {
+            setBiokeaPromptOpen(false)
+            // Returning player skipping the email opt-in: still post
+            // the run via existing handle so the score isn't dropped.
+            const existing = loadHandle()
+            if (existing) {
+              void submitDailyScore({
+                day: todayKey(),
+                handle: existing,
+                score: run.score,
+                antesCleared: run.upgrades.length,
+                characterId: character?.id ?? null,
+              })
+            }
+          }}
         />
       )}
     </div>
