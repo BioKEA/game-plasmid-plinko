@@ -83,6 +83,50 @@ export async function fetchTopScores(day: string, limit = 10): Promise<Leaderboa
   return entries.map(toRow)
 }
 
+export type LeaderboardWindow = 'today' | 'week' | 'all'
+
+// Inclusive start of the rolling 7-day window ending today. Lex compare
+// on YYYY-MM-DD seeds is chronological, so this is what we hand to the
+// seedFrom range filter.
+export function weekStart(today: string): string {
+  const d = new Date(today + 'T00:00:00Z')
+  d.setUTCDate(d.getUTCDate() - 6)
+  return d.toISOString().slice(0, 10)
+}
+
+// Collapses cross-day rows to one per handle (their best). Used for the
+// week + all-time windows so a single player who's posted every day
+// doesn't take up the whole top 10.
+function bestByHandle(rows: LeaderboardRow[]): LeaderboardRow[] {
+  const best = new Map<string, LeaderboardRow>()
+  for (const r of rows) {
+    const existing = best.get(r.handle)
+    if (!existing || r.score > existing.score) best.set(r.handle, r)
+  }
+  return Array.from(best.values()).sort((a, b) => b.score - a.score)
+}
+
+export async function fetchTop(
+  window: LeaderboardWindow,
+  today: string,
+  limit = 10,
+): Promise<LeaderboardRow[]> {
+  if (window === 'today') {
+    return fetchTopScores(today, limit)
+  }
+  const opts: { gameId: string; mode: string; limit: number; seedFrom?: string; seedTo?: string } = {
+    gameId: GAME_ID,
+    mode: 'daily',
+    limit: limit * 8,
+  }
+  if (window === 'week') {
+    opts.seedFrom = weekStart(today)
+    opts.seedTo = today
+  }
+  const entries = await leaderboard.getTopScores(opts)
+  return bestByHandle(entries.map(toRow)).slice(0, limit)
+}
+
 export async function fetchPlayerRank(day: string, score: number): Promise<number | null> {
   return leaderboard.getPlayerRank({
     gameId: GAME_ID,

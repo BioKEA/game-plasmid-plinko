@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import {
   fetchPlayerRank,
-  fetchTopScores,
+  fetchTop,
   hasSubmittedToday,
   loadHandle,
   saveHandle,
   sanitizeHandle,
   submitDailyScore,
   type LeaderboardRow,
+  type LeaderboardWindow,
 } from '@/lib/game/leaderboard'
 import { todayKey } from '@/lib/game/rng'
 import { CHARACTERS, type CharacterId } from '@/lib/game/characters'
@@ -20,6 +21,7 @@ interface Props {
 
 export function Leaderboard({ score, antesCleared, characterId }: Props) {
   const day = todayKey()
+  const [view, setView] = useState<LeaderboardWindow>('today')
   const [rows, setRows] = useState<LeaderboardRow[] | null>(null)
   const [rank, setRank] = useState<number | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -31,12 +33,13 @@ export function Leaderboard({ score, antesCleared, characterId }: Props) {
   useEffect(() => {
     void refresh()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [view])
 
   async function refresh() {
+    setRows(null)
     const [top, myRank] = await Promise.all([
-      fetchTopScores(day, 10),
-      fetchPlayerRank(day, score),
+      fetchTop(view, day, 10),
+      view === 'today' ? fetchPlayerRank(day, score) : Promise.resolve(null),
     ])
     setRows(top)
     setRank(myRank)
@@ -70,15 +73,35 @@ export function Leaderboard({ score, antesCleared, characterId }: Props) {
 
   return (
     <div className="border-2 border-cyan-400/40 bg-black/40 p-5 rounded-sm space-y-4 text-left">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="text-[10px] tracking-[0.3em] text-cyan-300 font-mono">
-          DAILY LEADERBOARD · {day}
+          {view === 'today'
+            ? `DAILY LEADERBOARD · ${day}`
+            : view === 'week'
+            ? 'LAST 7 DAYS · BEST PER PLAYER'
+            : 'ALL-TIME · BEST PER PLAYER'}
         </div>
-        {rank !== null && (
+        {view === 'today' && rank !== null && (
           <div className="text-[10px] font-mono text-fuchsia-300">
             YOUR RANK · <span className="text-fuchsia-300 font-bold">#{rank}</span>
           </div>
         )}
+      </div>
+
+      <div className="flex items-center gap-1">
+        {(['today', 'week', 'all'] as const).map((w) => (
+          <button
+            key={w}
+            onClick={() => setView(w)}
+            className={`text-[9px] uppercase tracking-[0.18em] font-mono px-3 py-1.5 rounded-sm border transition-colors ${
+              view === w
+                ? 'bg-cyan-400/15 text-cyan-100 border-cyan-400/60'
+                : 'text-slate-400 border-white/10 hover:text-cyan-200 hover:border-cyan-400/30'
+            }`}
+          >
+            {w === 'today' ? 'Today' : w === 'week' ? 'Week' : 'All-time'}
+          </button>
+        ))}
       </div>
 
       {!submitted && editing && (
@@ -116,7 +139,9 @@ export function Leaderboard({ score, antesCleared, characterId }: Props) {
         {rows === null ? (
           <div className="text-xs text-slate-500 font-mono py-4 text-center">loading scores…</div>
         ) : rows.length === 0 ? (
-          <div className="text-xs text-slate-500 font-mono py-4 text-center">be the first today.</div>
+          <div className="text-xs text-slate-500 font-mono py-4 text-center">
+            {view === 'today' ? 'be the first today.' : 'no scores yet.'}
+          </div>
         ) : (
           rows.map((row, i) => {
             const me = handle && row.handle === handle && row.score === score
