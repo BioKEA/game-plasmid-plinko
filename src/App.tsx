@@ -38,6 +38,8 @@ import {
   markCTAShownThisSession,
   dismissCTAForever,
 } from '@/lib/game/engagement'
+import { loadHandle, saveHandle, submitDailyScore } from '@/lib/game/leaderboard'
+import { BiokeaLeaderboardPrompt } from '@/components/BiokeaLeaderboardPrompt'
 import { StartScreen } from '@/components/game/StartScreen'
 import { GameScreen } from '@/components/game/GameScreen'
 import { UpgradePicker } from '@/components/game/UpgradePicker'
@@ -103,6 +105,19 @@ function App() {
   const [lastWin, setLastWin] = useState(false)
   const [muted, setMuted] = useState(false)
   const [showCTA, setShowCTA] = useState(false)
+  // BiokeaLeaderboardPrompt — auto-opens on daily game-over when no handle.
+  const [biokeaPromptOpen, setBiokeaPromptOpen] = useState(false)
+
+  // Open the BioKEA leaderboard prompt whenever a daily run ends and the
+  // player hasn't picked a handle yet. The existing in-RunSummary
+  // Leaderboard panel still renders — this just gives a clearer entry.
+  useEffect(() => {
+    if (screen !== 'game-over') return
+    if (mode !== 'daily') return
+    if (loadHandle()) return
+    if (run.score <= 0) return
+    setBiokeaPromptOpen(true)
+  }, [screen, mode, run.score])
 
   // Achievements + stats
   const [achievements, setAchievements] = useState<Set<AchievementId>>(new Set())
@@ -672,6 +687,31 @@ function App() {
           <AchievementToast key={t.id} achievement={ACHIEVEMENTS[t.achievement]} />
         ))}
       </div>
+      {biokeaPromptOpen && (
+        <BiokeaLeaderboardPrompt
+          trigger="game-end"
+          gameSlug="plasmid-plinko"
+          gameTitle="Plasmid Plinko"
+          score={{ value: run.score.toLocaleString(), label: 'Score', unit: 'pts' }}
+          defaultHandle={loadHandle() ?? ''}
+          onSubmit={(result) => {
+            saveHandle(result.handle)
+            setBiokeaPromptOpen(false)
+            // Post the run immediately so the player doesn't have to also
+            // tap the in-RunSummary Submit button. The Leaderboard panel
+            // inside RunSummary will render in submitted state on its
+            // next refresh because markSubmittedToday already fired.
+            void submitDailyScore({
+              day: todayKey(),
+              handle: result.handle,
+              score: run.score,
+              antesCleared: run.upgrades.length,
+              characterId: character?.id ?? null,
+            })
+          }}
+          onSkip={() => setBiokeaPromptOpen(false)}
+        />
+      )}
     </div>
   )
 }
