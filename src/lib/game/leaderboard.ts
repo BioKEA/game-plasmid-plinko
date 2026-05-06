@@ -111,15 +111,19 @@ export async function fetchTop(
   today: string,
   limit = 10,
 ): Promise<LeaderboardRow[]> {
-  if (window === 'today') {
-    return fetchTopScores(today, limit)
-  }
-  const opts: { gameId: string; mode: string; limit: number; seedFrom?: string; seedTo?: string } = {
+  // Pull a generous slice (limit * 8) so dedupe leaves enough rows for
+  // a top N even when a few handles dominate. Today dedupes too — a
+  // single client could post twice in one day if they replay across
+  // pages — so collapsing to one row per handle keeps the in-game
+  // panel and the central /mission/games/leaderboard consistent.
+  const opts: { gameId: string; mode: string; limit: number; seed?: string; seedFrom?: string; seedTo?: string } = {
     gameId: GAME_ID,
     mode: 'daily',
     limit: limit * 8,
   }
-  if (window === 'week') {
+  if (window === 'today') {
+    opts.seed = today
+  } else if (window === 'week') {
     opts.seedFrom = weekStart(today)
     opts.seedTo = today
   }
