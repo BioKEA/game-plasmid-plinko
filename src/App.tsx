@@ -712,9 +712,13 @@ function App() {
               antesCleared: run.upgrades.length,
               characterId: character?.id ?? null,
             }).then(() => {
-              // Golden Sample 26: server validates antesCleared >= 3.
-              // I won't tell. That would be cheating.
-              void tryClaimGoldenSample(result.handle)
+              // Golden Sample 26: gate on this run's antes so a long-
+              // ago level-3 run doesn't fire the reveal on a low-level
+              // loss today. I won't tell. That would be cheating.
+              void tryClaimGoldenSample({
+                handle: result.handle,
+                antesCleared: run.upgrades.length,
+              })
             })
           }}
           onSkip={() => {
@@ -730,7 +734,10 @@ function App() {
                 antesCleared: run.upgrades.length,
                 characterId: character?.id ?? null,
               }).then(() => {
-                void tryClaimGoldenSample(existing)
+                void tryClaimGoldenSample({
+                  handle: existing,
+                  antesCleared: run.upgrades.length,
+                })
               })
             }
           }}

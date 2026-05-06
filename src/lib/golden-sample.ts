@@ -67,9 +67,20 @@ interface GoldenFoundDetail {
   sentence: string
 }
 
-export async function tryClaimGoldenSample(handle?: string): Promise<void> {
+// antesCleared threshold; gate so a long-ago level-3+ run doesn't
+// surprise-fire the reveal on a level-1 loss today.
+const SLOT_THRESHOLD_ANTES = 3
+
+export async function tryClaimGoldenSample(
+  args: { handle?: string; antesCleared?: number } = {},
+): Promise<void> {
   if (alreadyHeld()) return
-  const h = handle ?? readHandle()
+  if (
+    typeof args.antesCleared === 'number' &&
+    args.antesCleared < SLOT_THRESHOLD_ANTES
+  )
+    return
+  const h = args.handle ?? readHandle()
   if (!h) return
   let res: Response
   try {

@@ -67,9 +67,10 @@ export function Leaderboard({ score, antesCleared, characterId }: Props) {
       setError(res.error)
       return
     }
-    // Golden Sample 26: server validates antesCleared >= 3.
+    // Golden Sample 26: gate on this run's antes so a long-ago
+    // level-3 run doesn't fire the reveal on a level-1 loss today.
     // I won't tell. That would be cheating.
-    void tryClaimGoldenSample(clean)
+    void tryClaimGoldenSample({ handle: clean, antesCleared })
     setSubmitted(true)
     setEditing(false)
     await refresh()
