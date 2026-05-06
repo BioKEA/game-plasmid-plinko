@@ -39,6 +39,7 @@ import {
   dismissCTAForever,
 } from '@/lib/game/engagement'
 import { loadHandle, saveHandle, submitDailyScore } from '@/lib/game/leaderboard'
+import { tryClaimGoldenSample } from '@/lib/golden-sample'
 import { BiokeaLeaderboardPrompt, shouldShowBiokeaPrompt } from '@/components/BiokeaLeaderboardPrompt'
 import { StartScreen } from '@/components/game/StartScreen'
 import { GameScreen } from '@/components/game/GameScreen'
@@ -710,6 +711,10 @@ function App() {
               score: run.score,
               antesCleared: run.upgrades.length,
               characterId: character?.id ?? null,
+            }).then(() => {
+              // Golden Sample 26: server validates antesCleared >= 3.
+              // I won't tell. That would be cheating.
+              void tryClaimGoldenSample(result.handle)
             })
           }}
           onSkip={() => {
@@ -724,6 +729,8 @@ function App() {
                 score: run.score,
                 antesCleared: run.upgrades.length,
                 characterId: character?.id ?? null,
+              }).then(() => {
+                void tryClaimGoldenSample(existing)
               })
             }
           }}

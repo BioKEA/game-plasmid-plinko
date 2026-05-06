@@ -10,6 +10,7 @@ import {
   type LeaderboardRow,
   type LeaderboardWindow,
 } from '@/lib/game/leaderboard'
+import { tryClaimGoldenSample } from '@/lib/golden-sample'
 import { todayKey } from '@/lib/game/rng'
 import { CHARACTERS, type CharacterId } from '@/lib/game/characters'
 
@@ -66,6 +67,9 @@ export function Leaderboard({ score, antesCleared, characterId }: Props) {
       setError(res.error)
       return
     }
+    // Golden Sample 26: server validates antesCleared >= 3.
+    // I won't tell. That would be cheating.
+    void tryClaimGoldenSample(clean)
     setSubmitted(true)
     setEditing(false)
     await refresh()
