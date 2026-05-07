@@ -1,8 +1,8 @@
 // src/lib/golden-sample.ts
 //
 // Plasmid Plinko's slice of the Golden Sample 26 hunt. Slot 4 unlocks
-// once any daily-mode run reaches level 3 — i.e. metadata.antesCleared
-// >= 3 in any submitted score row for this handle.
+// once any daily-mode run reaches level 8 — i.e. metadata.antesCleared
+// >= 8 in any submitted score row for this handle.
 //
 // The actual server-side validation lives in
 // website-biokea/src/lib/golden-sample/validate.ts. This file just
@@ -67,9 +67,10 @@ interface GoldenFoundDetail {
   sentence: string
 }
 
-// antesCleared threshold; gate so a long-ago level-3+ run doesn't
-// surprise-fire the reveal on a level-1 loss today.
-const SLOT_THRESHOLD_ANTES = 3
+// antesCleared threshold; gate so a long-ago level-8+ run doesn't
+// surprise-fire the reveal on a level-1 loss today. Mirror change in
+// website-biokea/src/lib/golden-sample/config.ts:SLOTS[3].threshold.
+const SLOT_THRESHOLD_ANTES = 8
 
 export async function tryClaimGoldenSample(
   args: { handle?: string; antesCleared?: number } = {},
