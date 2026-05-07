@@ -172,7 +172,13 @@ function App() {
       } catch { /* ignore */ }
     }
 
-    if (typeof window !== 'undefined') {
+    // Debug URL shortcuts (?debug=boss, ?debug=ante3, etc.) are dev-
+    // only — they would let any visitor jump straight to a high ante
+    // and trivialise the Golden Sample 26 unlock + skew leaderboards.
+    // import.meta.env.DEV is true under `vite dev` and stripped to
+    // false in production builds, so the whole branch is dead code
+    // when the games are bundled for biokea.ai.
+    if (import.meta.env.DEV && typeof window !== 'undefined') {
       const search = window.location.search
       if (search.includes('debug=boss')) {
         setMode('daily')
