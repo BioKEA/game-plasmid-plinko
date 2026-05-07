@@ -45,7 +45,7 @@ export function GameScreen({
       }}
     >
       {/* Top status bar */}
-      <div className="border-b-2 border-fuchsia-500/30 px-5 py-3 flex items-center justify-between backdrop-blur bg-black/20">
+      <div className="border-b-2 border-fuchsia-500/30 px-5 py-3 pr-16 flex items-center justify-between backdrop-blur bg-black/20">
         <div className="flex items-center gap-3">
           <span className="inline-block w-3 h-3 bg-fuchsia-500 shadow-[0_0_12px_rgba(217,70,239,0.9)]" />
           <span className="text-[10px] tracking-[0.3em] text-fuchsia-300 font-mono font-bold">
@@ -54,7 +54,7 @@ export function GameScreen({
         </div>
         <div className="flex items-center gap-3">
           <div className="text-[10px] text-cyan-300/80 font-mono tracking-widest">
-            ANTE {run.ante} / {totalAntes}
+            LEVEL {run.ante} / {totalAntes}
           </div>
           <div className="flex gap-1">
             {Array.from({ length: totalAntes }).map((_, i) => (

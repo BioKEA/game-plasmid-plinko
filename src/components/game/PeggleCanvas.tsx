@@ -298,6 +298,13 @@ export function PeggleCanvas({
     const points = Math.round(baseValue * multiplier * scoreMultiplier)
     shotChainScoreRef.current += points
     setShotChainScore(shotChainScoreRef.current)
+    // Live score update — players want to see the SCORE counter climb
+    // as each peg is hit, not jump in a single chunk after the ball
+    // settles. The chain pulse '+N ×N' next to it stays as a separate
+    // visual indicator. End-of-shot bulk-add is removed below to avoid
+    // double-counting.
+    scoreRef.current += points
+    setScore(scoreRef.current)
     if (feverActiveRef.current) feverScoreRef.current += points
 
     // First peg of the shot — fire any armed powerup effect
@@ -364,6 +371,9 @@ export function PeggleCanvas({
       const bonus = 50
       shotChainScoreRef.current += bonus
       setShotChainScore(shotChainScoreRef.current)
+      scoreRef.current += bonus
+      setScore(scoreRef.current)
+      if (feverActiveRef.current) feverScoreRef.current += bonus
       burstParticles(peg.spec.x, peg.spec.y, '#a78bfa', 14)
     }
 
@@ -609,10 +619,8 @@ export function PeggleCanvas({
       onChainPeak(peakChainThisShotRef.current)
     }
 
-    // Add chain score to total
-    const earned = shotChainScoreRef.current
-    scoreRef.current += earned
-    setScore(scoreRef.current)
+    // Score is updated live per-peg in handlePegHit; no bulk add here.
+    // shotChainScoreRef just drives the chain pulse readout.
 
     // Reset chain UI a moment after shot ends
     setTimeout(() => {

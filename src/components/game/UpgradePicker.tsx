@@ -40,7 +40,7 @@ export function UpgradePicker({ choices, ante, onPick, onSkip, title = 'Stock th
       <div className="max-w-3xl w-full space-y-8">
         <div className="text-center space-y-2">
           <div className="text-[10px] tracking-[0.4em] text-cyan-400/80 font-mono">
-            ANTE {ante - 1} CLEARED · CHOOSE A LAB UPGRADE
+            LEVEL {ante - 1} CLEARED · CHOOSE A LAB UPGRADE
           </div>
           <h2 className="text-4xl md:text-5xl font-black tracking-tight">
             {title}
