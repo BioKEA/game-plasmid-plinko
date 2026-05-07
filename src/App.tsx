@@ -344,6 +344,12 @@ function App() {
     setCharges(prev => ({ ...prev, [id]: Math.max(0, prev[id] - 1) }))
   }
 
+  function handleChainReward(id: PowerupId) {
+    // Earned by chains of 10+ pegs in one shot. Cap at a reasonable
+    // ceiling so a perfect run can't produce 50 charges.
+    setCharges(prev => ({ ...prev, [id]: Math.min(9, prev[id] + 1) }))
+  }
+
   // ---- Daily mode flow ----
   function handleDailyLevelEnd(result: LevelResult) {
     music.setIntensity(0)
@@ -682,6 +688,7 @@ function App() {
         onLevelEnd={mode === 'daily' ? handleDailyLevelEnd : handleCampaignLevelEnd}
         onPowerupConsumed={handlePowerupConsumed}
         onChainPeak={handleChainPeak}
+        onChainReward={handleChainReward}
         onJackpot={handleJackpot}
         onGenePegCleared={handleGenePegCleared}
       />

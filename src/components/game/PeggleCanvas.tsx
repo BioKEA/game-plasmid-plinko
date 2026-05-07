@@ -82,6 +82,11 @@ interface Props {
   onComplete: (result: LevelResult) => void
   onPowerupConsumed: (id: PowerupId) => void
   onChainPeak: (chainCount: number) => void
+  // Fired once per shot when the chain peaks at >= 10. Lets the host
+  // grant a random powerup charge as a "you earned this" reward for
+  // a long combo. Player feedback: "earn one random power up for
+  // every time you hit more than 10 pegs in a row."
+  onChainReward?: (powerupId: PowerupId) => void
   onJackpot: () => void
   onGenePegCleared: () => void
 }
@@ -114,6 +119,7 @@ export function PeggleCanvas({
   onComplete,
   onPowerupConsumed,
   onChainPeak,
+  onChainReward,
   onJackpot,
   onGenePegCleared,
 }: Props) {
@@ -138,6 +144,12 @@ export function PeggleCanvas({
   const firstPegThisShotRef = useRef(false)
   const peakChainThisShotRef = useRef(0)
   const magnetThisShotRef = useRef(false)
+  // Captures the armed powerup at launch time so the first-peg-hit
+  // handler can still fire multiball / lysis effects after armed has
+  // been consumed and cleared from armedPowerupRef. Without this, the
+  // first-peg handler reads armedPowerupRef.current = null (cleared in
+  // launchBall) and the burst/lysis effects never trigger.
+  const firstPegPowerupRef = useRef<PowerupId | null>(null)
   const shotStartTimeRef = useRef(0)
   // Position-displacement stuck detection: ring buffer of recent (x,y,t)
   // samples per ball. A ball is "stuck" if its bounding box over the last 1.2s
@@ -307,15 +319,19 @@ export function PeggleCanvas({
     setScore(scoreRef.current)
     if (feverActiveRef.current) feverScoreRef.current += points
 
-    // First peg of the shot — fire any armed powerup effect
+    // First peg of the shot — fire any armed powerup effect.
+    // Read from firstPegPowerupRef (captured at launch) rather than
+    // armedPowerupRef, which is null by now because launchBall clears
+    // it the moment the shot starts.
     if (!firstPegThisShotRef.current) {
       firstPegThisShotRef.current = true
-      const armed = armedPowerupRef.current
+      const armed = firstPegPowerupRef.current
       if (armed === 'multiball' && ballBody) {
         spawnMultiball(ballBody.position.x, ballBody.position.y)
       } else if (armed === 'lysis') {
         triggerLysis(peg.spec.x, peg.spec.y)
       }
+      firstPegPowerupRef.current = null
     }
 
     // Drive music intensity from chain
@@ -573,11 +589,16 @@ export function PeggleCanvas({
     setShotChainScore(0)
     // Consume the armed powerup once the shot is launched
     magnetThisShotRef.current = false
+    firstPegPowerupRef.current = null
     if (armedPowerupRef.current) {
       const used = armedPowerupRef.current
       onPowerupConsumed(used)
       // Magnet effect persists for the duration of the shot
       if (used === 'magnet') magnetThisShotRef.current = true
+      // Multiball + lysis fire on first peg hit; armedPowerupRef is
+      // about to be cleared, so capture the active powerup into a
+      // separate ref the first-peg handler can read.
+      if (used === 'multiball' || used === 'lysis') firstPegPowerupRef.current = used
       armedPowerupRef.current = null
       setArmedPowerup(null)
     }
@@ -617,6 +638,14 @@ export function PeggleCanvas({
     // Report peak chain to parent (for achievements)
     if (peakChainThisShotRef.current > 0) {
       onChainPeak(peakChainThisShotRef.current)
+    }
+    // Long-chain reward: one random powerup charge per shot that
+    // peaked at 10+ pegs. Once per shot — if the chain went 10, 12,
+    // 14 the player still gets exactly one reward, not three.
+    if (peakChainThisShotRef.current >= 10 && onChainReward) {
+      const ids: PowerupId[] = ['multiball', 'magnet', 'timewarp', 'lysis']
+      const choice = ids[Math.floor(Math.random() * ids.length)]
+      onChainReward(choice)
     }
 
     // Score is updated live per-peg in handlePegHit; no bulk add here.

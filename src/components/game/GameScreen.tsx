@@ -14,6 +14,7 @@ interface Props {
   onLevelEnd: (result: LevelResult) => void
   onPowerupConsumed: (id: PowerupId) => void
   onChainPeak: (chainCount: number) => void
+  onChainReward?: (id: PowerupId) => void
   onJackpot: () => void
   onGenePegCleared: () => void
 }
@@ -28,6 +29,7 @@ export function GameScreen({
   onLevelEnd,
   onPowerupConsumed,
   onChainPeak,
+  onChainReward,
   onJackpot,
   onGenePegCleared,
 }: Props) {
@@ -132,6 +134,7 @@ export function GameScreen({
             onComplete={onLevelEnd}
             onPowerupConsumed={onPowerupConsumed}
             onChainPeak={onChainPeak}
+            onChainReward={onChainReward}
             onJackpot={onJackpot}
             onGenePegCleared={onGenePegCleared}
           />
