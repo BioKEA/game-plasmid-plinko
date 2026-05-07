@@ -64,7 +64,6 @@ interface GoldenFoundDetail {
   token?: string
   issued_at?: string
   alreadyHeld: boolean
-  sentence: string
 }
 
 // antesCleared threshold; gate so a long-ago level-8+ run doesn't
@@ -109,7 +108,6 @@ export async function tryClaimGoldenSample(
     token: body.token,
     issued_at: body.issued_at,
     alreadyHeld: !body.first_earn,
-    sentence: 'Every Human Now Has Scientific Superpowers',
   }
   window.dispatchEvent(
     new CustomEvent<GoldenFoundDetail>('biokea:golden-found', { detail }),
