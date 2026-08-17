@@ -115,7 +115,7 @@ export async function fetchTop(
   // a top N even when a few handles dominate. Today dedupes too — a
   // single client could post twice in one day if they replay across
   // pages — so collapsing to one row per handle keeps the in-game
-  // panel and the central /mission/games/leaderboard consistent.
+  // panel and the central games.biokea.ai/leaderboard consistent.
   const opts: { gameId: string; mode: string; limit: number; seed?: string; seedFrom?: string; seedTo?: string } = {
     gameId: GAME_ID,
     mode: 'daily',
